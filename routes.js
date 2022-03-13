@@ -3,6 +3,7 @@ const router = express.Router();
 router.use(express.static('public'));
 const Validation = require('./utils/Validation.js');
 const validate = new Validation();
+const moment = require('moment');
 const { check, validationResult } = require('express-validator');
 const loginAgainLink = '<a href="/login-page">Please try again</a>';
 const User = require('./models/User.js');
@@ -109,7 +110,7 @@ router.get('/user/:id', (req, res, next) => {
         <h1>View user details</h1>
         <p>Username: ${user.username}</p>
         <p>Email: ${user.email}</p>
-        <p>Date registered: ${user.created_at}</p>
+        <p>Date registered: ${moment(user.created_at).format('Do MMMM, YYYY')})</p>
         <p>ID: ${user._id}</p>
         <p><a href="/">⬅ Home</a> | <a href="/users">All users</a></p>
     `);
@@ -130,7 +131,7 @@ router.get('/users', (req, res, next) => {
           <li><a href="/user/${user._id}">View user</a></li>
           <li>Username: ${user.username}</li>
           <li>Email: ${user.email}</li>
-          <li>Date registered: ${user.created_at}</li>
+          <li>Date registered: ${moment(user.created_at).format('Do MMMM, YYYY')}</li>
           <li>ID: ${user._id}</li>
         </ul>`;
       });
