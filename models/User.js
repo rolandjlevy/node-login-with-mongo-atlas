@@ -3,7 +3,10 @@ const { Schema } = mongoose;
 const bcrypt = require('bcrypt');
     
 const schemaOptions = {
-  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
+  timestamps: { 
+    createdAt: 'created_at', 
+    updatedAt: 'updated_at' 
+  },
 };
 
 const UserSchema = new Schema(
@@ -38,10 +41,10 @@ UserSchema.pre('save', async function(next) {
   }
 });
 
-UserSchema.methods.comparePassword = function(password, cb) {
-  bcrypt.compare(password, this.password, function(err, isMatch) {
-    if (err) return cb(err);
-    cb(null, isMatch);
+UserSchema.methods.comparePassword = (password, callback) => {
+  bcrypt.compare(password, this.password, (err, isMatch) => {
+    if (err) return callback(err);
+    callback(null, isMatch);
   });
 }
 
