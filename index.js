@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const express = require('express');
 const app = require('./app.js');
 
 const { MONGODB_URI, PORT } = process.env;
