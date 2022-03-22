@@ -30,11 +30,11 @@ router.post('/register', validate.rules.register, async (req, res, next) => {
   if (password) {
     await check('confirmedpassword').equals(password).withMessage('passwords do not match').run(req);
   }
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
+  const result = validationResult(req);
+  if (!result.isEmpty()) {
     let errorMessage = 'Invalid input. ';
     errorMessage += 'Email address must be valid, and the username and password must be 6 - 24 characters long. ';
-    if (errors.errors.length == 1 && errors.errors[0].param === 'confirmedpassword') {
+    if (result.errors.length == 1 && result.errors[0].param === 'confirmedpassword') {
       errorMessage = 'The password and confirmation password do not match. ';
     }
     errorMessage += tryAgainLink('register');
@@ -73,8 +73,8 @@ router.get('/login-page', (req, res) => {
 // Login result
 router.post('/login', validate.rules.login, (req, res, next) => {
   const { username, password } = req.body;
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
+  const result = validationResult(req);
+  if (!result.isEmpty()) {
     const error = new Error(`Invalid input. The username and password must be completed and be 6 - 24 characters long. ${tryAgainLink('login-page')}`);
     error.status = unprocessableEntityStatus;
     return next(error);
@@ -86,19 +86,25 @@ router.post('/login', validate.rules.login, (req, res, next) => {
         error.status = unprocessableEntityStatus;
         return next(error);
       } else {
-        user.comparePassword(password, (error, isMatch) => {
-          if (error) return next(error);
-          if (!isMatch) {
-            const error = new Error(`Incorrect password. ${tryAgainLink('login-page')}`);
-            error.status = unprocessableEntityStatus;
-            return next(error);
-          } else {
-            res.status(200).send(`
+        user.comparePassword(password)
+        .then(matched => {
+          if (matched) {
+            const page = (`
               <h1>Successful login</h1>
               <p>${user.username} you are now logged in</p>
               <p><a href="/">⬅ Home</a> | <a href="/user/${user._id}">View your details</a></p>
             `);
+            return res.status(200).send(page);
+          } else {
+            const error = {
+              message: `Incorrect password`,
+              statusCode: unprocessableEntityStatus
+            }
+            return next(error);
           }
+        })
+        .catch((error) => {
+          return next(error);
         });
       }
     })

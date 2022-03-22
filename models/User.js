@@ -1,16 +1,9 @@
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const { Schema, model } = mongoose;
 const bcrypt = require('bcrypt');
-    
-const schemaOptions = {
-  timestamps: { 
-    createdAt: 'created_at', 
-    updatedAt: 'updated_at' 
-  },
-};
+const saltRounds = 10;
 
-const UserSchema = new Schema(
-  {
+const UserSchema = new Schema({
   username: {
     type: String,
     required: true,
@@ -25,27 +18,24 @@ const UserSchema = new Schema(
     required: true
   }
 },
-  schemaOptions
+{ timestamps: true }
 );
 
 // use mongoose's middleware to hash password before save
-UserSchema.pre('save', async (next) => {
+UserSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   try {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(this.password, salt);
-    this.password = hashedPassword;
+    const salt = await bcrypt.genSaltSync(saltRounds);
+    const hash = await bcrypt.hashSync(this.password, salt);
+    this.password = hash;
     next();
   } catch (error) {
     next(error);
   }
 });
 
-UserSchema.methods.comparePassword = (password, callback) => {
-  bcrypt.compare(password, this.password, (err, isMatch) => {
-    if (err) return callback(err);
-    callback(null, isMatch);
-  });
+UserSchema.methods.comparePassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
 }
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = model('User', UserSchema, 'users');
